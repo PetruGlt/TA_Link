@@ -1,24 +1,24 @@
 Task1 (src/db.py, src/load.py, src/sanity.py):
-All csv files are read as text first and cast explicitly (used infer_schema_length=0) in order to assure that types aren't wrongly guessed.
+    All csv files are read as text first and cast explicitly (used infer_schema_length=0) in order to assure that types aren't wrongly guessed.
 
-I added extra columns for testing purposes and data validation:
-    for daily_status:
-        - changed_datetime_raw: due to different datetime formats (<short> 10-12-24 00:36 & more in daily_20241210.csv, <excel sn: days since 1899-12-30< 45667.xxxxx in daily_20250110.csv) 
-	  I had to standardize them to <ISO> yyyy-mm-dd hh:mm:ss
-        - source_file: double-checking data integrity
-        - file_date: extracted from the file name
-    for monthly_status:
-        - snapshot_ym and snapshot_year: extracted form file_name because the "month" column is too ambiguous without a "year" column.
+    I added extra columns for testing purposes and data validation:
+        for daily_status:
+            - changed_datetime_raw: due to different datetime formats (<short> 10-12-24 00:36 & more in daily_20241210.csv, <excel sn: days since 1899-12-30< 45667.xxxxx in daily_20250110.csv)
+          I had to standardize them to <ISO> yyyy-mm-dd hh:mm:ss
+            - source_file: double-checking data integrity
+            - file_date: extracted from the file name
+        for monthly_status:
+            - snapshot_ym and snapshot_year: extracted form file_name because the "month" column is too ambiguous without a "year" column.
 
-Row counts after load: accounts 501, daily_status 3625, monthly_status 5476
+    Row counts after load: accounts 501, daily_status 3625, monthly_status 5476
 
-Regarding data validation and anomalies:
-    - I ran checks (sanity.py):
-        - partial updates: no rows with empty or null values for queue and status.
-        - search for duplicates: none found
-        - accounts in daily and monthly data that are not in accounts db: none
-        - daily_status time-frame: 2024-11-26 06:57:35 - 2025-11-26 23:42:04
-    - account with id 99999 ("Test Trap") test record. It is kept in the raw tables but excluded from all output datasets.
+    Regarding data validation and anomalies:
+        - I ran checks (sanity.py):
+            - partial updates: no rows with empty or null values for queue and status.
+            - search for duplicates: none found
+            - accounts in daily and monthly data that are not in accounts db: none
+            - daily_status time-frame: 2024-11-26 06:57:35 - 2025-11-26 23:42:04
+        - account with id 99999 ("Test Trap") test record. It is kept in the raw tables but excluded from all output datasets.
 
 Task2-3 (sql/t2_acc_w_recent_activity.sql, sql/t3_detailed_acc_w_recent_activity.sql
          output/CSVs/accounts_w_recent_activity.sql):

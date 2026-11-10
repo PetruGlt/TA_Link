@@ -1,10 +1,11 @@
--- FIX for
+-- FIX for monthly timestamps
 ALTER TABLE monthly_status ADD COLUMN snapshot_ts timestamp(0);
 
 UPDATE monthly_status
 SET snapshot_ts = to_date(snapshot_ym || '01', 'YYYYMMDD') + INTERVAL '1 month'
 WHERE snapshot_ts IS NULL;
 
+-- 4. The most recent queue and/or status change for accounts that as of 2025-11-27 are in queues "COLLECTIONS" and "LEGAL"
 DROP TABLE IF EXISTS recent_queue_status_updates;
 
 CREATE TABLE recent_queue_status_updates AS
