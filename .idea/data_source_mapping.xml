@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/sql/old/t4_recent_queue_status_updates_old.sql" value="fc42d205-a34b-4cb9-8ee2-27253aa4cd17" />
+    <file url="file://$PROJECT_DIR$/sql/t2_acc_w_recent_activity.sql" value="fc42d205-a34b-4cb9-8ee2-27253aa4cd17" />
+    <file url="file://$PROJECT_DIR$/sql/t3_detailed_acc_w_recent_activity.sql" value="fc42d205-a34b-4cb9-8ee2-27253aa4cd17" />
+    <file url="file://$PROJECT_DIR$/sql/t4_recent_queue_status_updates.sql" value="fc42d205-a34b-4cb9-8ee2-27253aa4cd17" />
+    <file url="file://$PROJECT_DIR$/sql/t5_analyze.sql" value="fc42d205-a34b-4cb9-8ee2-27253aa4cd17" />
+  </component>
+</project>

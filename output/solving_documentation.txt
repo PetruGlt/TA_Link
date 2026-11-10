@@ -1,0 +1,51 @@
+Task1 (src/db.py, src/load.py, src/sanity.py):
+All csv files are read as text first and cast explicitly (used infer_schema_length=0) in order to assure that types aren't wrongly guessed.
+
+I added extra columns for testing purposes and data validation:
+    for daily_status:
+        - changed_datetime_raw: due to different datetime formats (<short> 10-12-24 00:36 & more in daily_20241210.csv, <excel sn: days since 1899-12-30< 45667.xxxxx in daily_20250110.csv) 
+	  I had to standardize them to <ISO> yyyy-mm-dd hh:mm:ss
+        - source_file: double-checking data integrity
+        - file_date: extracted from the file name
+    for monthly_status:
+        - snapshot_ym and snapshot_year: extracted form file_name because the "month" column is too ambiguous without a "year" column.
+
+Row counts after load: accounts 501, daily_status 3625, monthly_status 5476
+
+Regarding data validation and anomalies:
+    - I ran checks (sanity.py):
+        - partial updates: no rows with empty or null values for queue and status.
+        - search for duplicates: none found
+        - accounts in daily and monthly data that are not in accounts db: none
+        - daily_status time-frame: 2024-11-26 06:57:35 - 2025-11-26 23:42:04
+    - account with id 99999 ("Test Trap") test record. It is kept in the raw tables but excluded from all output datasets.
+
+Task2-3 (sql/t2_acc_w_recent_activity.sql, sql/t3_detailed_acc_w_recent_activity.sql
+         output/CSVs/accounts_w_recent_activity.sql):
+
+Task4 (sql/t4_recent_queue_status_updates.sql, output/CSVs/recent_queue_status_updates.csv):
+    - first try: (sql/old/)
+        - I first thought is enough to only search for daily updates up to the timestamp, but account with id 37924 has no daily updates data. Only monthly snapshots.
+        - account with id 82007 and 35504 proved me wrong about the daily-first logic
+            - 35504: most recent daily update is on 2025-10-06 with (queue = "OTHER",status = "ARCHIVED"). But, the monthly_reports show 
+	      that at the end of October (202510) the Queue="LEGAL" and Status="LEG VERIF 2". Therefore, the monthly update is newer than the daily update.
+            - Same with the account 82007, last daily_update is on 2025-09-22: queue = "OTHER" and status = "ARCHIVED". 
+	      The end of the month status for October is newer and updates the queue to "COLLECTIONS" and STATUS to "PRIME_D"
+
+        - to fix this I can:
+             1. Update the query
+             2. Refactor the monthly status update, and convert each year-month combination into a real timestamp (ex. 202511 -> '2025-12-01 00:00:00')
+
+        I chose option 2 (visible in sql/t4_recent_queue_status_updates.sql < commented "-- FIX"):
+            - I chose to convert each year-month into a timestamp: snapshot_ts is equal to the first moment of the following month.
+                202511 -> 2025-12-01 00:00:00. This is a derived column, raw values remaining untouched. This approach respects the description of 
+		the monthly snapshots given in the technical assessment description, which states: "Snapshot of latest state at the <end of each month>
+		for all active accounts from the first daily update up to the respective month."
+
+        - last_change_datetime on monthly_status is null because the data from this table does not represent the exact timestamp of the state update. 
+	  In order to avoid null values I will insert the last_known_daily_update field (representing the latest change of queue or/and state) 
+	  from daily_states and add the state_as_of field representing the most recent known change of date from monthly_updates. 
+	  This indicates that the update happened between the interval represented by last_known_daily_change and state_as_of, 
+	  without knowing the exact timestamp of the update.
+
+Task5 (sql/t5_performance.sql, output/TXTs/improvments_and_performance_comparison.txt):

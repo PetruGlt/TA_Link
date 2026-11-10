@@ -19,7 +19,7 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 #     "monthly_status": sorted(Path("data").glob("monthly_*.csv")),
 # }
 
-def parse_datetimes(df):
+def parse_datetime(df):
     raw = pl.col("changed_datetime")
     serial_days = raw.cast(pl.Float64, strict=False)
 
@@ -42,7 +42,7 @@ def parse_datetimes(df):
 
     return df.with_columns(parsed_datetime.alias("changed_datetime"))
 
-def prepare_accounts(df, path):
+def prepare_accounts(df):
     return df.with_columns(pl.col("account_id").cast(pl.Int64))
 
 def prepare_daily(df, path):
@@ -53,7 +53,7 @@ def prepare_daily(df, path):
         pl.lit(path.name).alias("source_file"),
         pl.lit(file_date).alias("file_date"),
         )
-    df =parse_datetimes(df)
+    df =parse_datetime(df)
 
 
     if df["changed_datetime"].null_count():
@@ -71,7 +71,7 @@ def prepare_monthly(df, path):
         pl.lit(int(snapshot_ym[:4])).alias("snapshot_year"),
         pl.lit(path.name).alias("source_file"),
     )
-def load_table(conn, current_table, paths, prepare_Function):
+def load_table(conn, current_table, paths, prepare_function):
     conn.execute(text(f"TRUNCATE {current_table.name} CASCADE"))
     total_rows = 0
     skipped_files = 0
@@ -84,11 +84,11 @@ def load_table(conn, current_table, paths, prepare_Function):
             print(f"Skipping empty file: {path}")
             continue
 
-        rows = prepare_Function(df,path).to_dicts()
+        rows = prepare_function(df,path).to_dicts()
         conn.execute(insert(current_table), rows)
         total_rows += len(rows)
 
-    if (skipped_files):
+    if skipped_files:
         print(f"!- Skipped {skipped_files} files while loading in {current_table.name}")
 
     print(total_rows, "rows loaded into ", current_table.name)

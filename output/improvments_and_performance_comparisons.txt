@@ -1,0 +1,29 @@
+Query measured:
+    - all daily_status rows (account name, address) for accounts that have been in queue COLLECTIONS or LEGAL.
+    - data:
+        - daily_status: 3625 rows
+        - accounts: 501 rows
+
+Results:
+    A. Baseline: select *, IN (subquery), no index
+        - Execution time: 1.267 - 1.638 ms
+        - Buffers: 103
+        - Scan on subquery: Seq Scan
+    B. Logical: only the needed columns
+        - Execution time: 1.199 - 1.495 ms
+        - Buffers: 103
+        - Scan on subquery: Seq Scan
+    C. Operational: B + index (queue, account)
+        - Execution time: 1.124 - 1.306 ms
+        - Buffers: 56-62
+        - Scan on subquery: Index Only Scan
+
+Comparisons:
+    - Execution time: practically unchanged (1.267 - 1.638 ms -> 1.124 - 1.306 ms). Ranges overlap, so the difference is mostly noise at this data size.
+    - Buffers: 103 -> 56-62 (~40% improvement)
+    - The subquery reads 8 buffers from the index instead of 49 directly from the table
+
+Improvements:
+    - Logical (query): select only the needed columns instead of select *, reducing the row width carried through joins.
+    - Operational (database): index on (queue, account). The subquery filters on queue and returns account, so it is answered from the index alone, no table access. There is no need of scanning the whole table and discarding the unmatched rows.
+

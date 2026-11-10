@@ -1,9 +1,5 @@
-from datetime import datetime
-from pathlib import Path
-
-from sqlalchemy import create_engine, text, MetaData, Column, Integer, Table, ForeignKey, insert, Text, Date
+from sqlalchemy import create_engine, MetaData, Column, Integer, Table, ForeignKey, Text, Date
 from dotenv import load_dotenv
-import polars as pl
 import os
 
 from sqlalchemy.dialects.postgresql import TIMESTAMP

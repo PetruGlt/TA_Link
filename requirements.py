@@ -1,0 +1,4 @@
+SQLAlchemy>=2.0
+psycopg2-binary>=2.9
+polars>=1.0
+python-dotenv>=1.0
